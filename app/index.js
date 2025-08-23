@@ -10,6 +10,17 @@ app.use(express.json());
 dotenv.config()
 app.use(cookieParser())
 
+// Auth Middleware
+const authMiddleware = (req, res, next) => {
+    if (req.cookies.token === "") {
+        res.send({ message: "Anauthorized Access" })
+    } else {
+        const data = jwt.verify(req.cookies.token, process.env.SECRET_KEY)
+        req.user = data
+        next()
+    }
+}
+
 // Register Account (POST Route)
 app.post("/signup", async (req, res) => {
     // Check if a user with the provided email already exists in the database
@@ -104,7 +115,7 @@ app.put("/update/:id", authMiddleware, async (req, res) => {
 })
 
 // DELETE POST by post id Route
-app.delete("/delete-post/:id", async (req, res) => {
+app.delete("/delete-post/:id", authMiddleware, async (req, res) => {
     const post = await postModel.findOneAndDelete({ _id: req.params.id })
     if (!post) {
         res.send({ message: "Something went wrong!", success: false })

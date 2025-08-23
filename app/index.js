@@ -94,6 +94,15 @@ app.get("/totalLikes/:id", authMiddleware, async (req, res) => {
     res.send({ message: "Total Likes", totalLikes: post.likes.length })
 })
 
+// UPDATE POST by post id Route
+app.put("/update/:id", authMiddleware, async (req, res) => {
+    const updatedPost = await postModel.findOneAndUpdate(
+        { _id: req.params.id },
+        { content: req.body.content }
+    )
+    res.send({ message: "Post updated successfully!", success: true })
+})
+
 // Start the server
 const PORT = process.env.PORT
 app.listen(PORT, () => {

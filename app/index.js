@@ -74,6 +74,12 @@ app.get("/posts", authMiddleware, async (req, res) => {
     res.send({ message: "Posts fetched successfully!", result: allPosts, success: true })
 })
 
+// GET PROFILE BY ID
+app.get("/profile/:id", authMiddleware, async (req, res) => {
+    const user = await userModel.findOne({ _id: req.params.id }).populate("posts")
+    res.send({ message: `Hi! ${user.name}, Welcome to your profile.`, posts: user.posts, success: true })
+})
+
 // Start the server
 const PORT = process.env.PORT
 app.listen(PORT, () => {

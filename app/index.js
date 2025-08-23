@@ -80,6 +80,14 @@ app.get("/profile/:id", authMiddleware, async (req, res) => {
     res.send({ message: `Hi! ${user.name}, Welcome to your profile.`, posts: user.posts, success: true })
 })
 
+// LIKE THE POST by post id API
+app.post("/like/:id", authMiddleware, async (req, res) => {
+    const post = await postModel.findOne({ _id: req.params.id })
+    post.likes.push(req.user.userId)
+    await post.save()
+    res.send({ message: "Liked!" })
+})
+
 // Start the server
 const PORT = process.env.PORT
 app.listen(PORT, () => {

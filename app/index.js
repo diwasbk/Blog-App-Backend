@@ -1,5 +1,6 @@
 import express from "express"
 import userModel from "./models/user.js"
+import postModel from "./models/post.js"
 import bcrypt, { hash } from "bcrypt"
 import dotenv from "dotenv"
 import jwt from "jsonwebtoken"
@@ -9,6 +10,17 @@ const app = express();
 app.use(express.json());
 dotenv.config()
 app.use(cookieParser())
+
+// Auth Middleware
+const authMiddleware = (req, res, next) => {
+    if (req.cookies.token === "") {
+        res.send({ message: "Anauthorized Access" })
+    } else {
+        const data = jwt.verify(req.cookies.token, process.env.SECRET_KEY)
+        req.user = data
+        next()
+    }
+}
 
 // Register Account (POST Route)
 app.post("/signup", async (req, res) => {
@@ -104,7 +116,7 @@ app.put("/update/:id", authMiddleware, async (req, res) => {
 })
 
 // DELETE POST by post id Route
-app.delete("/delete-post/:id", async (req, res) => {
+app.delete("/delete-post/:id", authMiddleware, async (req, res) => {
     const post = await postModel.findOneAndDelete({ _id: req.params.id })
     if (!post) {
         res.send({ message: "Something went wrong!", success: false })

@@ -1,7 +1,7 @@
 import mongoose, { mongo } from "mongoose"
 mongoose.connect("mongodb://127.0.0.1:27017/blogApp");
 const userSchema = mongoose.Schema({
-    usename: String,
+    username: String,
     name: String,
     email: String,
     password: String,

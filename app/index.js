@@ -50,6 +50,12 @@ app.post("/login", async (req, res) => {
     }
 });
 
+// Logout Account (GET Route)
+app.get("/logout", (req, res) => {
+    res.cookie("token", "")
+    res.send({ message: "Logout successfully!", success: true })
+})
+
 // Start the server
 const PORT = process.env.PORT
 app.listen(PORT, () => {

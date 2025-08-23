@@ -56,6 +56,24 @@ app.get("/logout", (req, res) => {
     res.send({ message: "Logout successfully!", success: true })
 })
 
+// POST API
+app.post("/post/:id", authMiddleware, async (req, res) => {
+    const user = await userModel.findOne({ _id: req.params.id })
+    const createdPost = await postModel.create({
+        user: user._id,
+        content: req.body.content
+    });
+    user.posts.push(createdPost._id)
+    await user.save()
+    res.send({ message: "Post created successfully!", result: createdPost, success: true })
+})
+
+// GET ALL POST API
+app.get("/posts", authMiddleware, async (req, res) => {
+    const allPosts = await postModel.find();
+    res.send({ message: "Posts fetched successfully!", result: allPosts, success: true })
+})
+
 // Start the server
 const PORT = process.env.PORT
 app.listen(PORT, () => {

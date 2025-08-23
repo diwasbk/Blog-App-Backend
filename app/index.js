@@ -88,6 +88,12 @@ app.post("/like/:id", authMiddleware, async (req, res) => {
     res.send({ message: "Liked!" })
 })
 
+// GET TOTAL LIKES by post id
+app.get("/totalLikes/:id", authMiddleware, async (req, res) => {
+    const post = await postModel.findOne({ _id: req.params.id })
+    res.send({ message: "Total Likes", totalLikes: post.likes.length })
+})
+
 // Start the server
 const PORT = process.env.PORT
 app.listen(PORT, () => {

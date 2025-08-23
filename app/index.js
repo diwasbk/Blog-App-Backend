@@ -113,6 +113,16 @@ app.delete("/delete-post/:id", async (req, res) => {
     }
 })
 
+// DELETE USER by user id
+app.delete("/delete-user/:id", authMiddleware, async (req, res) => {
+    const user = await userModel.findOneAndDelete({ _id: req.params.id })
+    if (!user) {
+        res.send({ message: `Something went wrong!`, success: false })
+    } else {
+        res.send({ message: `Your Profile ${req.user.name} has been deleted successfully!`, success: true })
+    }
+})
+
 // Start the server
 const PORT = process.env.PORT
 app.listen(PORT, () => {

@@ -103,6 +103,16 @@ app.put("/update/:id", authMiddleware, async (req, res) => {
     res.send({ message: "Post updated successfully!", success: true })
 })
 
+// DELETE POST by post id Route
+app.delete("/delete-post/:id", async (req, res) => {
+    const post = await postModel.findOneAndDelete({ _id: req.params.id })
+    if (!post) {
+        res.send({ message: "Something went wrong!", success: false })
+    } else {
+        res.send({ message: "Post deleted successfully!", success: true })
+    }
+})
+
 // Start the server
 const PORT = process.env.PORT
 app.listen(PORT, () => {

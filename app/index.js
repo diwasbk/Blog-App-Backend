@@ -2,10 +2,13 @@ import express from "express"
 import userModel from "./models/user.js"
 import bcrypt, { hash } from "bcrypt"
 import dotenv from "dotenv"
+import jwt from "jsonwebtoken"
+import cookieParser from "cookie-parser"
 
 const app = express();
 app.use(express.json());
 dotenv.config()
+app.use(cookieParser())
 
 // Register Account (POST Route)
 app.post("/signup", async (req, res) => {
@@ -24,6 +27,25 @@ app.post("/signup", async (req, res) => {
                 });
                 res.send({ message: "User registered successfully!", success: true })
             })
+        });
+    }
+});
+
+// Login Account (POST Route)
+app.post("/login", async (req, res) => {
+    // Check if a user with the provided email exists in the database
+    const user = await userModel.findOne({ email: req.body.email });
+    if (!user) {
+        res.send({ message: "Something went wrong!", success: false })
+    } else {
+        bcrypt.compare(req.body.password, user.password, (err, result) => {
+            if (result) {
+                const token = jwt.sign({ email: user.email, name: user.name, userId: user._id }, process.env.SECRET_KEY, { expiresIn: 3000 })
+                res.cookie("token", token)
+                res.send({ message: "Logged in successfully", success: true, token: token })
+            } else {
+                res.send({ message: "Something went wrong!", success: false })
+            }
         });
     }
 });

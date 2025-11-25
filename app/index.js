@@ -11,45 +11,68 @@ dotenv.config()
 
 // Register Account
 app.post("/signup", async (req, res) => {
-    // Check if a user with the provided email already exists in the database
-    const user = await userModel.findOne({ email: req.body.email });
-    if (user) {
-        res.send({ message: "Something went wrong!", success: false })
-    } else {
-        bcrypt.genSalt(10, (err, salt) => {
-            bcrypt.hash(req.body.password, salt, async (err, hash) => {
-                const createdUser = await userModel.create({
-                    username: req.body.username,
-                    name: req.body.name,
-                    email: req.body.email,
-                    password: hash
-                });
-                res.send({ message: "User registered successfully!", success: true })
-            })
-        });
+    try {
+        // Check if a user with the provided email already exists in the database
+        const user = await userModel.findOne({ email: req.body.email });
+        if (user) {
+            res.send({ message: "Something went wrong!", success: false })
+        } else {
+            bcrypt.genSalt(10, (err, salt) => {
+                bcrypt.hash(req.body.password, salt, async (err, hash) => {
+                    const createdUser = await userModel.create({
+                        username: req.body.username,
+                        name: req.body.name,
+                        email: req.body.email,
+                        password: hash
+                    });
+                    res.send({ message: "User registered successfully!", success: true })
+                })
+            });
+        }
+    }
+    catch (err) {
+        res.send({
+            message: err.message ?? "Unknown error",
+            success: false
+        })
     }
 });
 
 // Login Account
 app.post("/login", async (req, res) => {
-    // Check if a user with the provided email exists in the database
-    const user = await userModel.findOne({ email: req.body.email });
-    if (!user) {
-        res.send({ message: "Something went wrong!", success: false })
-    } else {
-        bcrypt.compare(req.body.password, user.password, (err, result) => {
-            if (result) {
-                const payload = {
-                    email: user.email,
-                    name: user.name,
-                    userId: user._id
+    try {
+        // Check if a user with the provided email exists in the database
+        const user = await userModel.findOne({ email: req.body.email });
+        if (!user) {
+            res.send({ message: "Something went wrong!", success: false })
+        } else {
+            bcrypt.compare(req.body.password, user.password, (err, result) => {
+                if (result) {
+                    const payload = {
+                        email: user.email,
+                        name: user.name,
+                        userId: user._id
+                    }
+                    const token = generateToken(payload)
+                    res.send({
+                        message: "Logged in successfully",
+                        success: true,
+                        token: token
+                    })
+                } else {
+                    res.send({
+                        message: "Something went wrong!",
+                        success: false
+                    })
                 }
-                const token = generateToken(payload)
-                res.send({ message: "Logged in successfully", success: true, token: token })
-            } else {
-                res.send({ message: "Something went wrong!", success: false })
-            }
-        });
+            });
+        }
+    }
+    catch (err) {
+        res.send({
+            message: err.message ?? "Unknown error",
+            success: false
+        })
     }
 });
 
@@ -97,26 +120,63 @@ app.put("/update-password", jwtAuthMiddleware, async (req, res) => {
 
 // POST by user id 
 app.post("/post/:id", jwtAuthMiddleware, async (req, res) => {
-    const user = await userModel.findOne({ _id: req.params.id })
-    const createdPost = await postModel.create({
-        user: user._id,
-        content: req.body.content
-    });
-    user.posts.push(createdPost._id)
-    await user.save()
-    res.send({ message: "Post created successfully!", result: createdPost, success: true })
+    try {
+        const user = await userModel.findOne({ _id: req.params.id })
+        const createdPost = await postModel.create({
+            user: user._id,
+            content: req.body.content
+        });
+        user.posts.push(createdPost._id)
+        await user.save()
+        res.send({
+            message: "Post created successfully!",
+            result: createdPost,
+            success: true
+        })
+    }
+    catch (err) {
+        res.send({
+            message: err.message ?? "Unknown error",
+            success: false
+        })
+    }
 })
 
 // GET All Post
 app.get("/posts", jwtAuthMiddleware, async (req, res) => {
-    const allPosts = await postModel.find();
-    res.send({ message: "Posts fetched successfully!", result: allPosts, success: true })
+    try {
+        const allPosts = await postModel.find();
+        res.send({
+            message: "Posts fetched successfully!",
+            result: allPosts,
+            success: true
+        })
+    }
+    catch (err) {
+        res.send({
+            message: err.message ?? "Unknown error",
+            success: false
+        })
+    }
 })
 
 // GET Profile By user id
 app.get("/profile/:id", jwtAuthMiddleware, async (req, res) => {
-    const user = await userModel.findOne({ _id: req.params.id }).populate("posts")
-    res.send({ message: `Hi! ${user.name}, Welcome to your profile.`, posts: user.posts, success: true })
+    try {
+        const user = await userModel.findOne({ _id: req.params.id }).populate("posts")
+        res.send({
+            message: `Hi! ${user.name}, Welcome to your profile.`,
+            posts: user.posts,
+            success: true
+        })
+    }
+    catch (err) {
+        res.send({
+            message: err.message ?? "Unknown error",
+            success: false
+        })
+    }
+
 })
 
 // Like/Unlike a post by id
@@ -174,36 +234,82 @@ app.get("/my-posts", jwtAuthMiddleware, async (req, res) => {
 
 // Get Total Likes By post id
 app.get("/totalLikes/:id", jwtAuthMiddleware, async (req, res) => {
-    const post = await postModel.findOne({ _id: req.params.id })
-    res.send({ message: "Total Likes", totalLikes: post.likes.length })
+    try {
+        const post = await postModel.findOne({ _id: req.params.id })
+        res.send({
+            message: "Total Likes",
+            totalLikes: post.likes.length
+        })
+    } catch (err) {
+        res.send({
+            message: err.message ?? "Unknown error",
+            success: false
+        })
+    }
 })
 
 // Update Post By post id 
 app.put("/update/:id", jwtAuthMiddleware, async (req, res) => {
-    const updatedPost = await postModel.findOneAndUpdate(
-        { _id: req.params.id },
-        { content: req.body.content }
-    )
-    res.send({ message: "Post updated successfully!", success: true })
+    try {
+        const updatedPost = await postModel.findOneAndUpdate(
+            { _id: req.params.id },
+            { content: req.body.content }
+        )
+        res.send({ message: "Post updated successfully!", success: true })
+    }
+    catch (err) {
+        res.send({
+            message: err.message ?? "Unknown error",
+            success: false
+        })
+    }
 })
 
 // Delete Post By post id
 app.delete("/delete-post/:id", jwtAuthMiddleware, async (req, res) => {
-    const post = await postModel.findOneAndDelete({ _id: req.params.id })
-    if (!post) {
-        res.send({ message: "Something went wrong!", success: false })
-    } else {
-        res.send({ message: "Post deleted successfully!", success: true })
+    try {
+        const post = await postModel.findOneAndDelete({ _id: req.params.id })
+        if (!post) {
+            res.send({
+                message: "Something went wrong!",
+                success: false
+            })
+        } else {
+            res.send({
+                message: "Post deleted successfully!",
+                success: true
+            })
+        }
+    }
+    catch (err) {
+        res.send({
+            message: err.message ?? "Unknown error",
+            success: false
+        })
     }
 })
 
 // Delete User By user id
 app.delete("/delete-user/:id", jwtAuthMiddleware, async (req, res) => {
-    const user = await userModel.findOneAndDelete({ _id: req.params.id })
-    if (!user) {
-        res.send({ message: `Something went wrong!`, success: false })
-    } else {
-        res.send({ message: `Your Profile ${req.user.name} has been deleted successfully!`, success: true })
+    try {
+        const user = await userModel.findOneAndDelete({ _id: req.params.id })
+        if (!user) {
+            res.send({
+                message: `Something went wrong!`,
+                success: false
+            })
+        } else {
+            res.send({
+                message: `Your Profile ${req.user.name} has been deleted successfully!`,
+                success: true
+            })
+        }
+    }
+    catch (err) {
+        res.send({
+            message: err.message ?? "Unknown error",
+            success: false
+        })
     }
 })
 

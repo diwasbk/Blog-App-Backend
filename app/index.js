@@ -155,6 +155,23 @@ app.post("/like-unlike/:id", jwtAuthMiddleware, async (req, res) => {
     }
 })
 
+// View My Posts
+app.get("/my-posts", jwtAuthMiddleware, async (req, res) => {
+    try {
+        const myPosts = await userModel.findOne({ _id: req.user.userId }).select("posts").populate("posts")
+        res.send({
+            message: `Author: ${req.user.name}`,
+            result: myPosts,
+            success: true
+        })
+    } catch (err) {
+        res.send({
+            message: err.message ?? "Unknown error",
+            success: false
+        })
+    }
+})
+
 // Get Total Likes By post id
 app.get("/totalLikes/:id", jwtAuthMiddleware, async (req, res) => {
     const post = await postModel.findOne({ _id: req.params.id })

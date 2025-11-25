@@ -2,6 +2,7 @@ import express from "express"
 import dotenv from "dotenv"
 import authRouter from "./routes/authRoutes.js";
 import profileRouter from "./routes/profileRoutes.js";
+import postRouter from "./routes/postRoutes.js";
 
 const app = express();
 
@@ -10,6 +11,7 @@ dotenv.config()
 
 app.use("/api/auth", authRouter)
 app.use("/api/profile", profileRouter)
+app.use("/api/post", postRouter)
 
 // Start The Server
 const PORT = process.env.PORT

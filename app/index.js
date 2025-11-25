@@ -53,6 +53,48 @@ app.post("/login", async (req, res) => {
     }
 });
 
+// Update password
+app.put("/update-password", jwtAuthMiddleware, async (req, res) => {
+    try {
+        const user = await userModel.findOne({ _id: req.user.userId })
+
+        bcrypt.compare(req.body.current_password, user.password, (err, result) => {
+            if (!result) {
+                return res.send({
+                    message: "Current pasword do not match"
+                })
+            }
+            if (req.body.new_password !== req.body.confirm_new_password) {
+                return res.send({
+                    message: "New passwords do not match.",
+                    success: false
+                })
+            }
+            // Update with hashed password
+            bcrypt.genSalt(10, (err, salt) => {
+                bcrypt.hash(req.body.confirm_new_password, salt, async (err, hash) => {
+                    const updatePassword = await userModel.findOneAndUpdate(
+                        { _id: req.user.userId },
+                        { $set: { password: hash } },
+                        { new: true } // return updated document
+                    )
+                    res.send({
+                        message: "Password updated successfully",
+                        result: updatePassword,
+                        success: true
+                    })
+                })
+            })
+        })
+
+    } catch (err) {
+        res.send({
+            message: err.message ?? "Unknown error",
+            success: false
+        })
+    }
+})
+
 // POST by user id 
 app.post("/post/:id", jwtAuthMiddleware, async (req, res) => {
     const user = await userModel.findOne({ _id: req.params.id })

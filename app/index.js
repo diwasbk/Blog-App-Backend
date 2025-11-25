@@ -119,12 +119,40 @@ app.get("/profile/:id", jwtAuthMiddleware, async (req, res) => {
     res.send({ message: `Hi! ${user.name}, Welcome to your profile.`, posts: user.posts, success: true })
 })
 
-// Like Post by post id 
-app.post("/like/:id", jwtAuthMiddleware, async (req, res) => {
-    const post = await postModel.findOne({ _id: req.params.id })
-    post.likes.push(req.user.userId)
-    await post.save()
-    res.send({ message: "Liked!" })
+// Like/Unlike a post by id
+app.post("/like-unlike/:id", jwtAuthMiddleware, async (req, res) => {
+    try {
+        const post = await postModel.findOne({ _id: req.params.id })
+        if (!post) {
+            return res.send({
+                message: "Post not found",
+                success: false
+            })
+        }
+        if (post.likes.includes(req.user.userId)) {
+            // Already liked --> remove like
+            await postModel.findOneAndUpdate(
+                { _id: req.params.id },
+                { $pull: { likes: req.user.userId } }
+            )
+            return res.send({
+                message: "Like Removed",
+                success: true
+            })
+        } else {
+            post.likes.push(req.user.userId)
+            await post.save()
+            res.send({
+                message: "Liked",
+                success: true
+            })
+        }
+    } catch (err) {
+        res.send({
+            message: err.message ?? "Unknown error",
+            success: false
+        })
+    }
 })
 
 // Get Total Likes By post id

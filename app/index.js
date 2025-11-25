@@ -233,12 +233,23 @@ app.get("/my-posts", jwtAuthMiddleware, async (req, res) => {
 })
 
 // Get Total Likes By post id
-app.get("/totalLikes/:id", jwtAuthMiddleware, async (req, res) => {
+app.get("/user/likes/:id", jwtAuthMiddleware, async (req, res) => {
     try {
         const post = await postModel.findOne({ _id: req.params.id })
+        if (!post) {
+            return res.send({
+                message: "Post not found",
+                success: false
+            })
+        }
+        const totalLikes = post.likes.length
+        const likedby = await userModel.find({ _id: post.likes }).select("username name")
         res.send({
-            message: "Total Likes",
-            totalLikes: post.likes.length
+            message: "Likes",
+            post: post,
+            totalLikes: totalLikes,
+            likedby: likedby,
+            success: true
         })
     } catch (err) {
         res.send({
@@ -247,6 +258,7 @@ app.get("/totalLikes/:id", jwtAuthMiddleware, async (req, res) => {
         })
     }
 })
+
 
 // Update Post By post id 
 app.put("/update/:id", jwtAuthMiddleware, async (req, res) => {

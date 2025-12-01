@@ -1,8 +1,8 @@
 import express from "express"
 import dotenv from "dotenv"
-import authRouter from "./routes/authRoutes.js";
-import profileRouter from "./routes/profileRoutes.js";
-import postRouter from "./routes/postRoutes.js";
+import authRouter from "./routes/authRoute.js";
+import profileRouter from "./routes/profileRoute.js";
+import postRouter from "./routes/postRoute.js";
 
 const app = express();
 
